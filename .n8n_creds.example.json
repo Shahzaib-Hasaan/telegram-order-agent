@@ -1,0 +1,14 @@
+{
+  "postgres": {
+    "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+    "name": "REPLACE_WITH_YOUR_CREDENTIAL_NAME"
+  },
+  "openAiApi": {
+    "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+    "name": "REPLACE_WITH_YOUR_CREDENTIAL_NAME"
+  },
+  "telegramApi": {
+    "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+    "name": "REPLACE_WITH_YOUR_CREDENTIAL_NAME"
+  }
+}

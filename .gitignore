@@ -1,0 +1,33 @@
+# ── Secrets ───────────────────────────────────────────────────────────────
+# CREDENTIALS.md holds live tokens, API keys and the database password.
+CREDENTIALS.md
+.n8n_creds.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Dependencies & build output ───────────────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Tooling / local artifacts ─────────────────────────────────────────────
+.vercel/
+.playwright-mcp/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

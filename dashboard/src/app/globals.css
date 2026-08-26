@@ -1,0 +1,420 @@
+@import 'tailwindcss';
+
+/* ===========================================================================
+   TANDOOR PASS — NOCTURNE
+   ---------------------------------------------------------------------------
+   The previous palette put a warm brown ground under warm orange accents.
+   Same hue family top to bottom, so nothing separated and everything muddied.
+
+   Nocturne fixes it by opposition: the ground is cool with zero warmth in it,
+   and every status colour is warm. Warm on cool is what makes the ramp read
+   instantly from across a room.
+
+   Discipline that keeps it premium: COLOUR IS RESERVED FOR STATUS. Chrome,
+   text, borders and controls are all neutral. If something is coloured, it is
+   telling you about an order.
+
+   TUNED FOR A FULL SHIFT, not for a screenshot. The first dark pass used a
+   near-black ground under near-white text at 16.9:1. That looks striking for
+   thirty seconds and then halates — letter edges glow, afterimages build, and
+   the eye is tired within the hour. The ground is lifted to #1B1F26 and the
+   text pulled back to 13.2:1: still AAA, far calmer to sit in front of.
+
+   Both themes are measured, never eyeballed. Ratios are in the comments.
+   =========================================================================== */
+
+@theme {
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --font-urdu: 'Noto Nastaliq Urdu', serif;
+
+  --color-ink-950: var(--t-page);
+  --color-ink-900: var(--t-col);
+  --color-ink-880: var(--t-archive);
+  --color-ink-850: var(--t-card);
+  --color-ink-800: var(--t-raised);
+  --color-line: var(--t-line);
+  --color-line-strong: var(--t-line-strong);
+  --color-mute: var(--t-mute);
+  --color-sub: var(--t-sub);
+  --color-fg: var(--t-fg);
+  --color-s-fresh: var(--t-fresh);
+  --color-s-warm: var(--t-warm);
+  --color-s-late: var(--t-late);
+  --color-s-over: var(--t-over);
+  --color-s-info: var(--t-info);
+}
+
+/* ---------------------------------------------------------------------------
+   LIGHT — a kitchen is a bright room by day, and a dark screen glares in it.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --t-page: #f2f4f7;
+  --t-col: #ffffff;
+  --t-archive: #f7f8fa;
+  --t-card: #ffffff;
+  --t-raised: #eef1f5;
+  --t-line: #e2e6ec;
+  --t-line-strong: #cfd5de;
+  --t-mute: #6b7483;   /*  4.6:1 */
+  --t-sub: #4e5765;    /*  7.3:1 */
+  --t-fg: #1a1d23;     /* 16.9:1 */
+  --t-fresh: #0b7a5a;  /*  5.0:1 */
+  --t-warm: #9a6b00;   /*  4.7:1 */
+  --t-late: #c2521c;   /*  4.6:1 */
+  --t-over: #ce2c28;   /*  5.2:1 */
+  --t-info: #1f62ce;   /*  5.7:1 */
+  --t-shadow: 0 1px 2px rgb(16 20 26 / 0.06), 0 1px 3px rgb(16 20 26 / 0.04);
+}
+
+/* ---------------------------------------------------------------------------
+   DARK — deliberately NOT near-black. #0B0C0E under near-white text produces
+   halation: glowing letter edges and afterimages that wear the eye down over a
+   shift. The ground is lifted and the text pulled back to ~13:1, which is still
+   AAA but reads calm for hours.
+   --------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --t-page: #14171c;
+    --t-col: #1b1f26;
+    --t-archive: #181c22;
+    --t-card: #212630;
+    --t-raised: #2a3039;
+    --t-line: #2e343e;
+    --t-line-strong: #3b424e;
+    --t-mute: #838c9a; /*  4.7:1 */
+    --t-sub: #a9b1bd; /*  7.6:1 */
+    --t-fg: #e2e6eb; /* 13.2:1 */
+    --t-fresh: #4fcfa6; /*  8.5:1 */
+    --t-warm: #e8b33f; /*  8.6:1 */
+    --t-late: #f0864a; /*  6.5:1 */
+    --t-over: #f2645e; /*  5.3:1 */
+    --t-info: #6fa5f5; /*  6.6:1 */
+    --t-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
+  }
+}
+
+/* An explicit choice wins over the system in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --t-page: #14171c;
+  --t-col: #1b1f26;
+  --t-archive: #181c22;
+  --t-card: #212630;
+  --t-raised: #2a3039;
+  --t-line: #2e343e;
+  --t-line-strong: #3b424e;
+  --t-mute: #838c9a;
+  --t-sub: #a9b1bd;
+  --t-fg: #e2e6eb;
+  --t-fresh: #4fcfa6;
+  --t-warm: #e8b33f;
+  --t-late: #f0864a;
+  --t-over: #f2645e;
+  --t-info: #6fa5f5;
+  --t-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
+}
+
+html,
+body {
+  background: var(--color-ink-950);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: var(--color-s-info);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   SIGNATURE — the status rail
+   A gauge down the left edge of every ticket, filling upward and shifting hue
+   as the order ages against the promise. It is the only saturated thing on a
+   resting card, so a busy board reads as a bar chart of urgency.
+   -------------------------------------------------------------------------- */
+.card {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-ink-850);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  box-shadow: var(--t-shadow);
+  transition: border-color 180ms, box-shadow 180ms, transform 140ms, opacity 180ms;
+}
+.card:hover {
+  border-color: var(--color-line-strong);
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--color-line);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  height: var(--rail, 8%);
+  background: var(--tone, var(--color-s-fresh));
+  z-index: 1;
+  transition: height 900ms cubic-bezier(0.4, 0, 0.2, 1), background 900ms linear;
+}
+.card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Past the promise. Restrained on purpose: on a bad night half the board is
+   over, and if every one of those shouts then none of them do. The rail and the
+   clock already carry the colour, so this only lifts the card off the ground. */
+.card[data-over='true'] {
+  border-color: color-mix(in oklab, var(--color-s-over) 22%, var(--color-line));
+  background: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--color-s-over) 7%, var(--color-ink-850)),
+    var(--color-ink-850) 45%
+  );
+}
+
+.card[data-pending='true'] {
+  opacity: 0.45;
+  transform: scale(0.99);
+}
+
+/* compact row — what a column becomes when the rush is on */
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: background-color 140ms, border-color 140ms;
+}
+.row:hover {
+  background: var(--color-ink-850);
+  border-color: var(--color-line);
+}
+.row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--tone, var(--color-s-fresh));
+}
+
+/* --------------------------------------------------------------------------
+   Motion — restrained, one moment each
+   -------------------------------------------------------------------------- */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+.live-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes arrive {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  35% {
+    box-shadow: 0 0 0 1px var(--color-s-fresh), 0 0 28px -8px var(--color-s-fresh);
+  }
+}
+.arrive {
+  animation: rise 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both, arrive 1.7s ease-out 300ms 2;
+}
+
+@keyframes shimmer {
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-ink-850) 25%,
+    var(--color-ink-800) 37%,
+    var(--color-ink-850) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .rise,
+  .arrive,
+  .skeleton {
+    animation: none;
+  }
+  .card,
+  .card::before {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Controls
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 34px;
+  padding: 0 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 140ms, border-color 140ms, color 140ms, opacity 140ms;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-ink-800);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-fg);
+  font-weight: 600;
+}
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in oklab, var(--color-fg) 10%, var(--color-ink-800));
+  border-color: var(--color-line-strong);
+}
+.btn-accent {
+  background: var(--color-fg);
+  color: var(--color-ink-950);
+  font-weight: 600;
+}
+.btn-accent:not(:disabled):hover {
+  background: color-mix(in oklab, var(--color-fg) 88%, var(--color-ink-950));
+}
+.btn-ghost {
+  border: 1px solid var(--color-line);
+  color: var(--color-sub);
+}
+.btn-ghost:not(:disabled):hover {
+  border-color: var(--color-line-strong);
+  color: var(--color-fg);
+}
+.btn-danger:not(:disabled):hover {
+  border-color: color-mix(in oklab, var(--color-s-over) 45%, transparent);
+  color: var(--color-s-over);
+}
+
+.field {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 0.625rem;
+  background: var(--color-ink-950);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-fg);
+  font-size: 13px;
+  transition: border-color 140ms;
+}
+.field::placeholder {
+  color: var(--color-mute);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--color-s-info);
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-s-info);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Scroll
+   -------------------------------------------------------------------------- */
+.scroller {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+  overscroll-behavior: contain;
+}
+.scroller::-webkit-scrollbar {
+  width: 8px;
+}
+.scroller::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 4px;
+}
+.scroller::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-fg) 25%, var(--color-line-strong));
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nastaliq is a calligraphic script: it sits on a steep diagonal baseline and
+   needs both size and headroom. Below ~14px it collapses into an illegible
+   squiggle, which would make it decoration rather than language. */
+.urdu {
+  font-family: var(--font-urdu);
+  font-size: 14px;
+  line-height: 2.6;
+  color: var(--color-mute);
+  padding-block: 2px;
+}
+
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-mute);
+}
