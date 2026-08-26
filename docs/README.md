@@ -1,20 +1,28 @@
 # Screenshots
 
-Drop four PNGs in this folder and they appear automatically in the main README.
-Nothing else needs editing — the image tags are already in place.
+Used by the main README.
 
-| Filename | What to capture |
+| File | Shows |
 |---|---|
-| `board.png` | The kitchen board with several live orders across the urgency range — green, amber and a red one past the promise. Run `python db/seed_demo_orders.py` first to populate it |
-| `telegram.png` | A Telegram conversation: an order in Roman Urdu through to the cart with the Confirm / Cancel buttons |
-| `compact.png` | The board in compact mode during a rush. Seed ~20 orders, or press the **Compact** toggle |
-| `menu.png` | The Menu page, showing the aliases under each item — this is what makes the bot understand `zingr` |
+| `board.png` | The kitchen board — three columns, urgency rails, Urdu column heads |
+| `telegram.png` | Menu plus a customer ordering in Roman Urdu |
+| `telegram-cart.png` | The itemised cart with Confirm / Cancel buttons |
+| `compact.png` | Board in compact mode during a rush |
+| `menu.png` | Menu editor, showing the aliases the bot listens for |
+| `n8n-workflow.png` | The agent workflow and its seven database tools |
 
-**Before you screenshot:**
+## Replacing them
 
-- Use demo data, never real customers. `python db/seed_demo_orders.py` gives you
-  a realistic board; `--clear` removes it again.
-- Check nothing sensitive is on screen: connection strings, tokens, browser tabs,
-  real phone numbers or addresses.
-- Dark theme photographs better for the board. The Menu page reads well in either.
-- Around 1440px wide is a good balance of detail and file size.
+All are demo data from the fictional **Tandoor & Bun**. If you re-shoot:
+
+```bash
+export DATABASE_URL="..."
+python db/seed_demo_orders.py          # populate the board
+# take screenshots
+python db/seed_demo_orders.py --clear  # tidy up
+```
+
+Before you shoot, check the frame for anything you would not publish: connection
+strings, API keys, browser tabs, real customer names, phone numbers or addresses.
+Blur what you cannot avoid — the Telegram screenshots here have the phone number
+and delivery address blurred for exactly that reason.

@@ -21,15 +21,27 @@ about correctness changes.
 
 ## Screenshots
 
-| The kitchen board | Ordering in Telegram |
+**The kitchen board.** Every ticket carries a coloured rail that fills as the
+order ages against the 45-minute promise — green, amber, then red once it is
+late. A glance across the room tells you what is in trouble.
+
+<img src="docs/board.png" alt="Kitchen order board with three columns — New, Cooking, Out — each ticket showing items, total and a colour-coded urgency rail" width="100%">
+
+| Ordering in Roman Urdu | The cart, confirmed by button |
 |---|---|
-| <img src="docs/board.png" alt="Live order board showing tickets colour-coded by how long they have been waiting" width="100%"> | <img src="docs/telegram.png" alt="Telegram conversation placing an order in Roman Urdu" width="100%"> |
+| <img src="docs/telegram.png" alt="Telegram chat showing the menu and a customer ordering in Roman Urdu" width="100%"> | <img src="docs/telegram-cart.png" alt="Itemised cart in Telegram with Confirm and Cancel buttons" width="100%"> |
+
+*Typing "haan" or "ok" never places an order — only the button does, and it
+carries the id of a cart that was already priced and stored.*
 
 | Compact mode during a rush | Menu management |
 |---|---|
-| <img src="docs/compact.png" alt="Board switched to compact rows so twenty orders fit per column" width="100%"> | <img src="docs/menu.png" alt="Menu editor showing each item's aliases" width="100%"> |
+| <img src="docs/compact.png" alt="Board switched to compact rows so around twenty orders fit per column" width="100%"> | <img src="docs/menu.png" alt="Menu editor showing each item with the aliases the bot listens for" width="100%"> |
 
-<sub>See [`docs/README.md`](docs/README.md) for what to capture in each.</sub>
+**The agent workflow in n8n.** The seven database functions hanging off the agent
+are everything it can do — there is no eighth, and it cannot write its own SQL.
+
+<img src="docs/n8n-workflow.png" alt="n8n canvas showing the Telegram trigger, routing, the AI agent, and its seven Postgres tool nodes" width="100%">
 
 ---
 
