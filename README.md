@@ -23,11 +23,13 @@ about correctness changes.
 
 | The kitchen board | Ordering in Telegram |
 |---|---|
-| _`docs/board.png`_ | _`docs/telegram.png`_ |
+| <img src="docs/board.png" alt="Live order board showing tickets colour-coded by how long they have been waiting" width="100%"> | <img src="docs/telegram.png" alt="Telegram conversation placing an order in Roman Urdu" width="100%"> |
 
-| Compact mode (busy service) | Menu management |
+| Compact mode during a rush | Menu management |
 |---|---|
-| _`docs/compact.png`_ | _`docs/menu.png`_ |
+| <img src="docs/compact.png" alt="Board switched to compact rows so twenty orders fit per column" width="100%"> | <img src="docs/menu.png" alt="Menu editor showing each item's aliases" width="100%"> |
+
+<sub>See [`docs/README.md`](docs/README.md) for what to capture in each.</sub>
 
 ---
 
