@@ -1,0 +1,129 @@
+{
+  "name": "Tandoor & Bun — Status Notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -460,
+        0
+      ],
+      "id": "368048e9-179c-5434-a976-42f824319bd9",
+      "name": "Every 20s"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH claimed AS (\n  SELECT e.id\n    FROM order_status_events e\n   WHERE NOT e.notified\n     AND e.to_status IN ('preparing','on_the_way','delivered','cancelled')\n     AND e.created_at > now() - interval '2 hours'\n   ORDER BY e.id\n   LIMIT 20\n   FOR UPDATE SKIP LOCKED\n), marked AS (\n  UPDATE order_status_events SET notified = true\n   WHERE id IN (SELECT id FROM claimed)\n  RETURNING id, order_id, to_status\n)\nSELECT m.id            AS event_id,\n       m.to_status     AS status,\n       o.id            AS order_id,\n       o.total,\n       o.delivery_address AS address,\n       o.customer_tg_id   AS chat_id,\n       c.eta_minutes\n  FROM marked m\n  JOIN orders o ON o.id = m.order_id\n  CROSS JOIN shop_config c\n WHERE c.id = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "a917c4ab-3ebf-5f38-8cbe-ac8aac051c79",
+      "name": "Claim Unsent",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1500,
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// One Telegram message per claimed event, in the customer's language.\nconst MSG = {\n  preparing: (o) =>\n    `👨‍🍳 Order #${o.order_id} tayyar ho raha hai.\\n\\nAap ka khana tandoor par hai. ${o.eta_minutes} min mein pohanch jayega.`,\n  on_the_way: (o) =>\n    `🛵 Order #${o.order_id} raasty mein hai!\\n\\nRider nikal chuka hai — ${o.address}\\nRs ${o.total} cash on delivery.`,\n  delivered: (o) =>\n    `✅ Order #${o.order_id} deliver ho gaya.\\n\\nShukriya! Umeed hai maza aya. Dobara order karna ho to bas message kar dein. 🙂`,\n  cancelled: (o) =>\n    `❌ Order #${o.order_id} cancel kar diya gaya hai.\\n\\nKoi masla ho to batayein.`,\n};\n\nreturn $input.all()\n  .filter((i) => i.json && i.json.order_id && MSG[i.json.status])\n  .map((i) => ({ json: {\n    chatId: i.json.chat_id,\n    text: MSG[i.json.status](i.json),\n    eventId: i.json.event_id,\n    orderId: i.json.order_id,\n    status: i.json.status,\n  }}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        0
+      ],
+      "id": "7ce371f1-d60a-5cdf-aba6-36eefdc94639",
+      "name": "Compose"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        0
+      ],
+      "id": "96782ebf-8e0c-596d-ad69-7129995042c3",
+      "name": "Tell Customer",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 20s": {
+      "main": [
+        [
+          {
+            "node": "Claim Unsent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Unsent": {
+      "main": [
+        [
+          {
+            "node": "Compose",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose": {
+      "main": [
+        [
+          {
+            "node": "Tell Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none"
+  }
+}

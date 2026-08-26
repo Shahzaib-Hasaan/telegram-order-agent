@@ -177,7 +177,11 @@ Beginner-friendly, in order. Budget about 30 minutes.
 
 4. Create an n8n API key: **Settings → n8n API → Create an API key**.
 
-5. Set your environment and deploy both workflows:
+5. Deploy both workflows. **Either** import the ready-made JSON —
+   n8n → Workflows → *Import from File* → pick
+   `n8n/workflows/order-agent.json`, then `status-notifier.json`, and select your
+   credentials in the nodes that show a warning — **or** run the builders, which
+   is the better path if you intend to maintain it:
 
    ```bash
    cp .env.example .env        # then edit it
@@ -317,8 +321,12 @@ Stated honestly, so nobody is surprised:
 │   ├── 07_scale.sql        indexes for volume
 │   └── seed_demo_orders.py optional demo tickets for screenshots
 ├── n8n/
-│   ├── build_workflow.py   deploys the Order Agent
-│   └── build_notifier.py   deploys the Status Notifier
+│   ├── build_workflow.py   deploys the Order Agent (source of truth)
+│   ├── build_notifier.py   deploys the Status Notifier
+│   ├── export_workflows.py regenerates the JSON below from those builders
+│   └── workflows/          importable JSON, credentials stripped
+│       ├── order-agent.json
+│       └── status-notifier.json
 ├── dashboard/              Next.js kitchen board
 │   └── src/
 │       ├── app/            board, history, menu, login, API routes

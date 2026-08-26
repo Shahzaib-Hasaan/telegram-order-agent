@@ -1,0 +1,855 @@
+{
+  "name": "Tandoor & Bun — Order Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        0
+      ],
+      "id": "de0e07f8-b42e-523c-b0ba-346c42e84041",
+      "name": "Telegram Trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const u = $input.first().json;\nconst cb = u.callback_query;\n\nif (cb) {\n  const parts = (cb.data || '').split(':');\n  return [{ json: {\n    kind: 'button',\n    chatId: cb.message.chat.id,\n    userId: cb.from.id,\n    username: cb.from.username || '',\n    firstName: cb.from.first_name || '',\n    action: parts[0] || '',\n    cartId: parseInt(parts[1] || '0', 10),\n    callbackQueryId: cb.id,\n    messageId: cb.message.message_id,\n    text: ''\n  }}];\n}\n\nconst m = u.message || {};\nreturn [{ json: {\n  kind: 'text',\n  chatId: m.chat ? m.chat.id : null,\n  userId: m.from ? m.from.id : null,\n  username: (m.from && m.from.username) || '',\n  firstName: (m.from && m.from.first_name) || '',\n  action: '', cartId: 0, callbackQueryId: '', messageId: m.message_id,\n  text: m.text || ''\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ],
+      "id": "f10e36e4-1d86-5c83-9b73-a489fc513b73",
+      "name": "Normalize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f039b0b3-61e7-5998-9cd9-755c72072ad5",
+              "leftValue": "={{ $json.kind }}",
+              "rightValue": "button",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "49d2860f-c5d8-5ca4-8260-5d463210ce0a",
+      "name": "Button or Message?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c31e94ac-154a-5fb2-8a91-d0f253ff8a18",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "confirm",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -60,
+        -260
+      ],
+      "id": "a4f88f44-8767-5bbe-ac58-3ba3e4b810aa",
+      "name": "Confirm or Cancel?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT fn_confirm_cart($1::bigint, $2::int) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$json.chatId, $json.cartId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        -360
+      ],
+      "id": "bac34ac5-0f01-50fa-b57d-12a852c15647",
+      "name": "Confirm Cart",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT fn_cancel_cart($1::bigint, $2::int) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$json.chatId, $json.cartId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        -160
+      ],
+      "id": "30c2853e-2cd7-5d26-bd02-373061adae0a",
+      "name": "Cancel Cart",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json.result;\nlet text;\nif (r.ok && r.already) {\n  text = `Order #${r.order_id} is already placed. 👍`;\n} else if (r.ok) {\n  text = `✅ *Order #${r.order_id} confirmed!*\\n\\nTotal: Rs ${r.total}\\n📍 ${r.address}\\n⏱ ${r.eta_minutes} min\\n\\nShukriya! Rider raasty mein hoga jald.`;\n} else {\n  text = r.message || 'Something went wrong. Please try again.';\n}\nreturn [{ json: { text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        -360
+      ],
+      "id": "eb5ef401-aba7-528f-ae50-20e50b7809e9",
+      "name": "Format Confirmation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json.result;\nreturn [{ json: { text: r.ok\n  ? 'Order cancel kar diya. Jab dil karay dobara order kar dijiye 🙂'\n  : (r.message || 'Nothing to cancel.') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        -160
+      ],
+      "id": "71bf6cc1-4ab2-57a9-87ec-ec567481dadb",
+      "name": "Format Cancellation"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize').first().json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        -260
+      ],
+      "id": "fe5cb247-8f42-549c-8648-305af11d78c9",
+      "name": "Send Button Reply",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are the order-taking assistant for Tandoor & Bun, a restaurant at 12-C Main Boulevard, Gulberg III, Lahore.\n\nLANGUAGE\nReply in whatever language the customer writes. Roman Urdu in, Roman Urdu out. English in, English out. Keep replies to 1-3 short lines. Warm, quick, a little informal. At most one emoji.\n\nSHOP FACTS\nHours 12:00 PM to 2:00 AM daily. Delivery Rs 120, free over Rs 2000. Minimum order Rs 500. Delivery takes 35-45 minutes. Cash on delivery only.\nWe deliver to Gulberg, Model Town, Johar Town, Garden Town and DHA Phase 1-5. Anywhere else, apologise and offer pickup.\n\nYOUR TOOLS - you may use ONLY these\n- get_menu: the whole menu. Use it for \"what do you have\" style questions.\n- check_item: look up one item by name. Use it before quoting ANY price.\n- get_profile: see what you already know about this customer.\n- save_customer: save the customer's name, phone or address.\n- stage_order: build the cart for confirmation. THIS DOES NOT PLACE THE ORDER.\n- order_status: look up an existing order.\n- cancel_order: cancel an existing order.\n\nHARD RULES\n1. Never state a price or an item name that did not come back from get_menu or check_item. If you are unsure, call the tool. Never guess, never invent a deal.\n2. To place an order you must call stage_order. It returns a cart which the customer confirms by tapping a button. After stage_order, tell them you have sent the order for confirmation and ask them to tap Confirm. NEVER say the order is placed.\n3. Never treat \"haan\", \"yes\", \"ok\", \"theek hai\", \"confirm\" or any typed text as confirmation. Only the button confirms an order.\n4. Before stage_order the customer needs a name, phone and address on file. Call get_profile first. If something is missing, ask for it and save it with save_customer. For a returning customer, read back the saved address and ask if it is still right rather than asking from scratch.\n5. If a tool comes back with ok:false, tell the customer what its message says, in their language. Never invent an order number.\n6. If the customer asks for something not on the menu, say so plainly and suggest the closest thing that IS on the menu.\n7. Stay on topic: this restaurant, its menu, and its orders. Nothing else.\n\nFIRST CONTACT\nIf the customer sends /start, \"hi\", \"salam\" or any greeting, welcome them to Tandoor & Bun in ONE line, say what we do in a few words, and offer to show the menu. Do not dump the whole menu unless they ask for it.\n\nMENU\nWhen you call get_menu, send its output back to the customer EXACTLY as it comes, character for character. Do not reformat it, do not shorten item names, do not drop prices. \"Zinger Burger\" is not \"Zinger\". \"Soft Drink 345ml\" is not \"Soft Drink\". You may add one short line before it and one after.\n\nDELIVERY DETAILS - read this twice\nALWAYS call get_profile first. It tells you `known`, what we already have, and a `missing` list.\n\nRETURNING CUSTOMER (known = true, missing is empty):\nDo NOT ask for anything again. Read back the saved address in one short line and ask only \"yehi address theek hai?\" If they say yes, go straight to stage_order. Only if they give a NEW address do you call save_customer.\n\nNEW OR INCOMPLETE (missing is not empty):\nAsk ONLY for what `missing` lists, ONE thing at a time. Save each answer with save_customer as soon as you get it.\n\nname, phone and address are THREE SEPARATE things.\nNEVER pull a name or a phone number out of an address. A house number is not a phone number. A street name is not a person's name. If the customer sends only an address, save ONLY the address and then ask for the rest.\n\nPHONE\nMust be a Pakistani mobile: 11 digits starting 03, like 0300-1234567. Landlines are not accepted. Ask for it plainly: \"Apna mobile number bhi bata dein (03xx-xxxxxxx)\".\nIf save_customer returns bad_phone, do NOT retry with a different guess. Tell the customer the number looks wrong and ask them to send it again.\n\nAFTER stage_order\nThe itemised cart, the total and the Confirm button are sent to the customer automatically. Reply with ONE short line only, such as \"Order tayyar hai, Confirm dabayein.\" NEVER repeat the items, the prices or the total.\n\nFORMATTING\nWrite PLAIN TEXT only. Do not use markdown - no **bold**, no __underline__, no backticks. Telegram shows those characters literally and it looks broken. Use line breaks and emoji for structure instead. Keep any single reply under 3000 characters.\n",
+          "maxIterations": 8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -60,
+        220
+      ],
+      "id": "541ee511-040d-564a-af81-3772f3cbd3ab",
+      "name": "Order Agent",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.5",
+          "mode": "list",
+          "cachedResultName": "gpt-5.5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -260,
+        460
+      ],
+      "id": "655fef32-977e-55d8-98c4-de4493fbb9af",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Normalize').first().json.chatId }}",
+        "tableName": "n8n_chat_histories",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -100,
+        460
+      ],
+      "id": "3076031b-335a-526b-844e-532444365b0b",
+      "name": "Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Returns the full Tandoor & Bun menu with every item and its price, grouped by category. Use this when the customer asks what is available, what the menu is, or what you sell.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_get_menu() AS menu;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        60,
+        460
+      ],
+      "id": "2906a459-0166-5111-872e-cb1218478295",
+      "name": "get_menu",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Looks up one menu item by name and returns its real price and availability. Handles Roman Urdu and misspellings (\"zingr\", \"adha karahi\", \"thanda\"). ALWAYS call this before quoting a price. Returns up to 4 matches - if more than one comes back, ask the customer which they meant.",
+        "operation": "executeQuery",
+        "query": "SELECT name, price, category, available FROM fn_check_item($1);",
+        "options": {
+          "queryReplacement": "={{ [$fromAI('item_name', 'the item the customer mentioned, exactly as they typed it', 'string')] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        220,
+        460
+      ],
+      "id": "d554bc3b-869c-5158-ad0b-fc09b138092f",
+      "name": "check_item",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Returns what we already know about this customer: known (true/false), name, phone, address, past_orders, and a \"missing\" list of fields still needed. ALWAYS call this before asking for any delivery detail, so a returning customer is never asked twice.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_get_profile($1::bigint) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        380,
+        460
+      ],
+      "id": "b2d59318-0630-5400-9287-fad2e5a772d8",
+      "name": "get_profile",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Saves or updates the customer name, phone number and delivery address. Pass empty string for anything you do not have yet - blank values never overwrite something already saved.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_save_customer($1::bigint, $2, $3, $4, $5) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId, $fromAI('name','customer full name, empty string if unknown','string'), $fromAI('phone','customer phone number, empty string if unknown','string'), $fromAI('address','full delivery address, empty string if unknown','string'), $('Normalize').first().json.username] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        540,
+        460
+      ],
+      "id": "f2f5f163-b2e6-548c-b033-e06416b90a61",
+      "name": "save_customer",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Builds the cart and sends it to the customer for button confirmation. THIS DOES NOT PLACE THE ORDER - the customer must tap Confirm. Prices are looked up server-side, so pass item names and quantities only. Returns ok:false with a message if an item is unknown, the customer profile is incomplete, or the cart is under the Rs 500 minimum.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_stage_cart($1::bigint, $2::jsonb, $3) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId, $fromAI('items', 'JSON array of the cart, e.g. [{\"name\":\"Zinger Burger\",\"qty\":2},{\"name\":\"Coke\",\"qty\":1}]', 'string'), $fromAI('note','any special instruction such as extra spicy, empty string if none','string')] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        700,
+        460
+      ],
+      "id": "3730e49a-00df-54af-bbba-bad0ddf70693",
+      "name": "stage_order",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Looks up one of THIS customer's orders and returns its status, items and total. Pass 0 for the order number to get their most recent order.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_order_status($1::bigint, NULLIF($2,0)::int) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId, $fromAI('order_id','the order number the customer asked about, or 0 for their latest','number')] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        860,
+        460
+      ],
+      "id": "e9dad9cf-33f8-5433-831b-97d59f7db6c0",
+      "name": "order_status",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Cancels one of THIS customer's existing orders. Only works while the order is still new or preparing. Returns ok:false with a reason otherwise.",
+        "operation": "executeQuery",
+        "query": "SELECT fn_cancel_order($1::bigint, $2::int, $3) AS result;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId, $fromAI('order_id','the order number to cancel','number'), $fromAI('reason','why they are cancelling, empty string if not given','string')] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1020,
+        460
+      ],
+      "id": "7b178f3d-1d8c-5b60-905b-ee915ba2af68",
+      "name": "cancel_order",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($('Order Agent').first().json.output ?? '').toString();\n\nconst isTrace =\n  /^\\s*\\[?\\s*used\\s+tools?\\s*:/i.test(raw) ||\n  /\bTool:\\s*\\w+\\s*,\\s*Input:/i.test(raw) ||\n  /^\\s*\\{?\\s*\"?(action|tool_calls?|function_call)\"?\\s*:/i.test(raw);\n\nconst empty = raw.trim().length === 0;\n\nreturn [{ json: {\n  text: (isTrace || empty)\n    ? 'Maaf kijiye, woh message theek se process nahi hua. Dobara bhej dein?'\n    : raw,\n  flagged: isTrace || empty,\n  raw\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        110,
+        220
+      ],
+      "id": "d921da76-b3e4-54da-aabf-3545090b0113",
+      "name": "Clean Reply"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id AS cart_id, summary FROM pending_carts WHERE customer_tg_id = $1::bigint AND status = 'pending' ORDER BY id DESC LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$('Normalize').first().json.chatId] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        300,
+        220
+      ],
+      "id": "f7c2bd7d-8c3c-5324-ac43-f85e96c7769f",
+      "name": "Any Cart Awaiting Confirm?",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "de476ddc-c1fb-5fb9-aced-29d1335ffe55",
+              "leftValue": "={{ $json.cart_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        520,
+        220
+      ],
+      "id": "1004cef8-298b-5424-9a08-f181f1360012",
+      "name": "Cart Staged?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize').first().json.chatId }}",
+        "text": "={{ $json.summary }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Confirm",
+                    "additionalFields": {
+                      "callback_data": "=confirm:{{ $json.cart_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Cancel",
+                    "additionalFields": {
+                      "callback_data": "=cancel:{{ $json.cart_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        120
+      ],
+      "id": "dd2e4a5a-2570-5fc9-ba4b-dc1c216b5237",
+      "name": "Send Cart + Buttons",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Normalize').first().json.chatId }}",
+        "text": "={{ $('Clean Reply').first().json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        320
+      ],
+      "id": "0b8ee414-f84f-5865-a779-d6b68be329c8",
+      "name": "Send Reply",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Button or Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Button or Message?": {
+      "main": [
+        [
+          {
+            "node": "Confirm or Cancel?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm or Cancel?": {
+      "main": [
+        [
+          {
+            "node": "Confirm Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancel Cart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Cart": {
+      "main": [
+        [
+          {
+            "node": "Format Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Cart": {
+      "main": [
+        [
+          {
+            "node": "Format Cancellation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Send Button Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Cancellation": {
+      "main": [
+        [
+          {
+            "node": "Send Button Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Agent": {
+      "main": [
+        [
+          {
+            "node": "Clean Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Reply": {
+      "main": [
+        [
+          {
+            "node": "Any Cart Awaiting Confirm?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Cart Awaiting Confirm?": {
+      "main": [
+        [
+          {
+            "node": "Cart Staged?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cart Staged?": {
+      "main": [
+        [
+          {
+            "node": "Send Cart + Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_menu": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_item": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_profile": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_customer": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stage_order": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "order_status": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancel_order": {
+      "ai_tool": [
+        [
+          {
+            "node": "Order Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
