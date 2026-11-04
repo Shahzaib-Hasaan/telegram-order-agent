@@ -2,8 +2,6 @@
 # CREDENTIALS.md holds live tokens, API keys and the database password.
 CREDENTIALS.md
 .n8n_creds.json
-.env
-.env.*
 !.env.example
 *.pem
 *.key
@@ -30,7 +28,4 @@ venv/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
+config.bat
